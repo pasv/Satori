@@ -1,0 +1,7 @@
+TODO:
+1. make multithreaded
+2. work out the agent
+3. save the output into something greppable or csv
+4. automate mimikatz usage on dumps
+5. automate setting up Samba
+6. make error handling not suck

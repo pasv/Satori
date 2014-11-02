@@ -1,0 +1,66 @@
+Satori: Powershell over WMI - Hunting for system admins, show no mercy!
+
+Satori is basically a stealthy tool to elevate privileges on a domain network by dumping credentials 
+out of hosts through LSASS memory to a UNC path based on whether or not they have interesting (DA/EA) users
+that have sessions still active. After the dumps have been extracted from the target hosts it's simple to use
+mimikatz minidump mode to load the file and pull out wdigest creds, LSA secrets, etc. It requires admin to the
+target machine, and for the DCOM interface to be open, but this is almost always open on internal networks.
+
+While you can still achieve the same thing by using psexec with metasploit and then loading mimikatz into memory,
+WMI doesnt leave obvious event logs and lingering services. It's clean and effective to simply
+ask Windows nicely for what you want, and leave nothing to chance as far as AV/HIPS.
+
+Still very much alpha software, I pieced it together after getting tired of a particularly ugly bash script
+that was used with the original wmiexec.py code for multiple hosts. Welcome to suggestions or pull requests!
+
+Features:
+-Dumps LSASS memory for offline analysis (mimikatz) to a UNC path
+-Enumerates users currently logged in (or ones that may have disconnected sessions)
+-Deploys a powershell agent that continously checks for a list of users, if the user is found lsass is dumped
+-Can deploy meterpreter via powershell (future)
+-Accepts lists of hosts
+-Accepts arbitrary powershell for use with other modules
+-In the future will be multi-threaded cleanly...
+
+Options:
+Impacket v0.9.13-dev - Copyright 2002-2014 Core Security Technologies
+
+usage: satori.py      [-h] [-host HOST] [-share SHARE] [-nooutput]
+                      [-domain DOMAIN] [-user USER] [-password PASSWORD]
+                      [-hosts HOSTS] [-targetusers TARGETUSERS] [-mode MODE]
+                      [-uncpath UNCPATH] [-hashes LMHASH:NTHASH]
+                      [psh [psh ...]]
+
+positional arguments:
+  psh                   Powershell to execute on remote host, or file
+                        containing powershell
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -host HOST            [domain/][username[:password]@]<address>
+  -share SHARE          share where the output will be grabbed from (default
+                        ADMIN$)
+  -nooutput             whether or not to print the output (no SMB connection
+                        created)
+  -domain DOMAIN        SMB Domain to use, leave blank for local accounts
+  -user USER            SMB user account to execute powershell with
+  -password PASSWORD    Password for SMB user account, if omitted hash will be
+                        used
+  -hosts HOSTS          Newline separated file of SMB hosts
+  -targetusers TARGETUSERS
+                        Target users (usually Domain Admins) to conditionally
+                        dump LSASS memory to UNC path
+  -mode MODE            The following modes are accepted: [1] Enumerate users
+                        [2] Dump lsass memory to UNC path [3] Powershell
+                        meterpreter. If no mode is given powershell must be
+                        provided to be excuted [4] Push powershell agent to
+                        monitor for a set list of users and dump lsass memory
+                        upon login
+  -uncpath UNCPATH      UNC path used for exfiltration for mode 2 and 4
+  -hashes LMHASH:NTHASH
+                        NTLM hashes, format is LMHASH:NTHASH
+
+Requirements:
+Since this was based off an example from Impacket it should go without saying that impacket is required. I based it off Impacket v0.9.13-dev:
+https://code.google.com/p/impacket/downloads/list
+
